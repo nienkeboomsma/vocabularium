@@ -1,0 +1,11 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: backend
+    ports:
+      - "6666:6666"
+    restart: always
+    volumes:
+      - ./backend:/app/server
+      - ./data:/data

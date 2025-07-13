@@ -1,0 +1,53 @@
+data/
+
+# Binary files
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.o
+*.a
+
+# Build output
+bin/
+build/
+dist/
+
+# Test output
+cover.html
+
+# Go cache & metadata
+go.work
+go.work.sum
+
+# Vendor directory (if you run `go mod vendor`)
+vendor/
+
+# Test files
+*.log
+*.tmp
+*.temp
+*.cache
+coverage.out
+
+# Editor/project files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.bak
+*~
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Docker
+*.tar
+*.img
+
+# Environment files
+.env

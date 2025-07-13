@@ -1,0 +1,77 @@
+package collatinus
+
+import (
+	"bytes"
+	"fmt"
+	"strings"
+
+	"github.com/nienkeboomsma/collatinus/domain"
+)
+
+type Language string
+
+const (
+	LanguageCA Language = "-tca"
+	LanguageDE Language = "-tde"
+	LanguageEN Language = "-ten"
+	LanguageES Language = "-tes"
+	LanguageEU Language = "-teu"
+	LanguageFR Language = "-tfr"
+	LanguageGL Language = "-tgl"
+	LanguageIT Language = "-tit"
+	LanguageNL Language = "-tnl"
+	LanguagePT Language = "-tpt"
+)
+
+type TextProcessor struct {
+	chunkSize int
+	language  Language
+}
+
+func NewTextProcessor(language string) *TextProcessor {
+	var validatedLanguage Language
+
+	switch strings.ToLower(language) {
+	case "ca":
+		validatedLanguage = LanguageCA
+	case "de":
+		validatedLanguage = LanguageDE
+	case "en":
+		validatedLanguage = LanguageEN
+	case "es":
+		validatedLanguage = LanguageES
+	case "eu":
+		validatedLanguage = LanguageEU
+	case "fr":
+		validatedLanguage = LanguageFR
+	case "gl":
+		validatedLanguage = LanguageGL
+	case "it":
+		validatedLanguage = LanguageIT
+	case "nl":
+		validatedLanguage = LanguageNL
+	case "pt":
+		validatedLanguage = LanguagePT
+	}
+
+	return &TextProcessor{
+		language: validatedLanguage,
+	}
+}
+
+func (tp *TextProcessor) Process(input []byte) (*[]domain.Word, error) {
+	sanitised := sanitise(input)
+
+	chunks := chunkBySentence(sanitised)
+
+	var total bytes.Buffer
+
+	err := lemmatise(chunks, &total, LanguageEN)
+	if err != nil {
+		return &[]domain.Word{}, fmt.Errorf("failed to lemmatise: %w", err)
+	}
+
+	words := mapToWords(&total)
+
+	return words, nil
+}
