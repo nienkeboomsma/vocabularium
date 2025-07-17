@@ -13,7 +13,7 @@ services:
     networks:
       - backend
     ports:
-      - "6666:6666"
+      - "4321:4321"
     restart: always
     volumes:
       - ./backend:/app/server

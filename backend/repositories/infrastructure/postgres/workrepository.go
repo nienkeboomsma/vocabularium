@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/nienkeboomsma/collatinus/database"
@@ -10,10 +11,46 @@ import (
 )
 
 type WorkRepository struct {
+	db *database.Client
 }
 
-func NewWorkRepository() *WorkRepository {
-	return &WorkRepository{}
+func NewWorkRepository(db *database.Client) *WorkRepository {
+	return &WorkRepository{db: db}
+}
+
+func (wr *WorkRepository) Get(ctx context.Context) ([]domain.Work, error) {
+	q := `
+	SELECT w.id, a.id, a.name, w.title, w.type
+	FROM work w
+	JOIN author a
+	ON a.id = w.author_id;
+	`
+
+	works := []domain.Work{}
+
+	rows, err := wr.db.Pool.Query(ctx, q)
+	if err != nil {
+		return []domain.Work{}, fmt.Errorf("failed to execute query: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		work := domain.Work{}
+
+		err = rows.Scan(&work.ID, &work.Author.ID, &work.Author.Name, &work.Title, &work.Type)
+		if err != nil {
+			return []domain.Work{}, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		works = append(works, work)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return []domain.Work{}, fmt.Errorf("failed to read rows: %w", err)
+	}
+
+	return works, nil
 }
 
 func (wr *WorkRepository) Save(ctx context.Context, db database.Executor, w domain.Work, authorID uuid.UUID) (domain.Work, error) {

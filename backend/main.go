@@ -36,19 +36,28 @@ func main() {
 	}
 
 	authorRepository := repositories.NewAuthorRepository()
-	workRepository := repositories.NewWorkRepository()
+	workRepository := repositories.NewWorkRepository(db)
 	wordRepository := repositories.NewWordRepository()
 	workWordRepository := repositories.NewWorkWordRepository()
 
 	wp := postgres.NewWorkPersister(db, authorRepository, workRepository, wordRepository, workWordRepository)
 
-	api := api.NewAPI(tp, wp)
+	api := api.NewAPI(tp, wp, workRepository)
 
-	http.HandleFunc("/lemmatise", api.Lemmatise())
+	mux := http.NewServeMux()
 
-	fmt.Println("Listening at :6666")
+	mux.HandleFunc("GET /frequency-list/{id}", api.GetFrequencyListByWork())
+	mux.HandleFunc("GET /frequency-list-author/{id}", api.GetFrequencyListByAuthor())
+	mux.HandleFunc("GET /glossary/{id}", api.GetGlossaryByWork())
+	mux.HandleFunc("GET /works", api.GetWorks())
 
-	err = http.ListenAndServe(":6666", nil)
+	mux.HandleFunc("POST /lemmatise", api.Lemmatise())
+	mux.HandleFunc("POST /update-word-status", api.UpdateWordStatus())
+
+	// TODO: set ports via .env
+	fmt.Println("Listening at :4321")
+
+	err = http.ListenAndServe(":4321", mux)
 	if err != nil {
 		log.Fatal("Failed to start server: " + err.Error())
 	}

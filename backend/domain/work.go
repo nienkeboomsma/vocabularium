@@ -16,7 +16,7 @@ const (
 type Work struct {
 	ID       uuid.UUID
 	Title    string
-	Author   []Author
+	Author   Author
 	Type     WorkType
 	Created  time.Time
 	Modified time.Time

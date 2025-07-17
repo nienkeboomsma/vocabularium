@@ -26,7 +26,7 @@ docker compose down
 ## Usage
 
 ### Adding a work
-Send a POST request to `localhost:6666/lemmatise` with the following `multipart/form-data` fields:
+Send a POST request to `localhost:4321/lemmatise` with the following `multipart/form-data` fields:
 
 | Field    | Type                   |
 | -------- | ---------------------- |
@@ -43,5 +43,5 @@ curl -X POST \
   -F "author=Plautus" \
   -F "title=Amphitryo" \
   -F "type=verse" \
-  http://localhost:6666/lemmatise
+  http://localhost:4321/lemmatise
 ```

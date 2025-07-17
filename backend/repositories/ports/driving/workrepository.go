@@ -9,5 +9,6 @@ import (
 )
 
 type WorkRepository interface {
+	Get(ctx context.Context) ([]domain.Work, error)
 	Save(ctx context.Context, db database.Executor, w domain.Work, authorID uuid.UUID) (domain.Work, error)
 }
