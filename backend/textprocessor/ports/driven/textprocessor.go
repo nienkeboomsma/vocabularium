@@ -1,7 +1,10 @@
 package driven
 
-import "github.com/nienkeboomsma/collatinus/domain"
+import (
+	"github.com/google/uuid"
+	"github.com/nienkeboomsma/collatinus/domain"
+)
 
 type TextProcessor interface {
-	Process([]byte) (*[]domain.Word, error)
+	Process([]byte) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word, error)
 }

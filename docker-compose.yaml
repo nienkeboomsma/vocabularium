@@ -3,9 +3,41 @@ services:
     build:
       context: ./backend
     container_name: backend
+    depends_on:
+      database:
+        condition: service_healthy
+        restart: true
+    environment:
+      COLLATINUS_LANGUAGE: ${COLLATINUS_LANGUAGE}
+      DB_URL: ${DB_URL}
+    networks:
+      - backend
     ports:
       - "6666:6666"
     restart: always
     volumes:
       - ./backend:/app/server
-      - ./data:/data
+  database:
+    container_name: database
+    image: postgres:17
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 1s
+      retries: 999999
+      start_period: 3s
+    networks:
+      - backend
+    ports:
+      - 5432:5432
+    restart: always
+    volumes:
+      - database:/var/lib/postgresql/data
+
+networks:
+  backend:
+
+volumes:
+  database:

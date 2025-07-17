@@ -8,11 +8,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
+	"github.com/nienkeboomsma/collatinus/database"
 	"github.com/nienkeboomsma/collatinus/domain"
 )
 
-func mapToWords(input io.Reader) *[]domain.Word {
-	var words []domain.Word
+func mapToWords(input io.Reader) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word) {
+	workWords := []domain.WorkWord{}
+	words := make(map[uuid.UUID]domain.Word)
 
 	scanner := bufio.NewScanner(input)
 
@@ -49,24 +52,28 @@ func mapToWords(input io.Reader) *[]domain.Word {
 
 		previousWordIndexInSentence = wordIndexInSentence
 
-		word := domain.Word{
-			WordIndex:           wordCount,
-			SentenceIndex:       sentenceCount,
-			WordIndexInSentence: wordIndexInSentence,
-			OriginalForm:        strings.TrimSpace(cols[3]),
-			Translation:         "unknown",
+		workWord := domain.WorkWord{
+			WordIndex:     wordCount,
+			SentenceIndex: sentenceCount,
+			OriginalForm:  strings.TrimSpace(cols[3]),
 		}
 
 		if len(cols) != 10 {
-			words = append(words, word)
+			workWords = append(workWords, workWord)
 			continue
 		}
 
-		word.LemmaRaw = strings.TrimSpace(cols[5])
-		word.LemmaRich = strings.TrimSpace(cols[6])
-		word.Translation = strings.TrimSpace(cols[8])
-		word.Tag = strings.TrimSpace(cols[4])
-		word.MorphoSyntacticalAnalysis = strings.TrimSpace(cols[9])
+		word := domain.Word{
+			LemmaRaw:    strings.TrimSpace(cols[5]),
+			LemmaRich:   strings.TrimSpace(cols[6]),
+			Translation: strings.TrimSpace(cols[8]),
+		}
+
+		word.ID = database.StringToUUID(fmt.Sprintf("%s_%s", word.LemmaRaw, word.LemmaRich))
+
+		workWord.WordID = word.ID
+		workWord.Tag = strings.TrimSpace(cols[4])
+		workWord.MorphoSyntacticalAnalysis = strings.TrimSpace(cols[9])
 
 		if cols[7] != "" {
 			frequencyInLASLA, err := strconv.Atoi(cols[7])
@@ -78,8 +85,9 @@ func mapToWords(input io.Reader) *[]domain.Word {
 			word.FrequencyInLASLA = frequencyInLASLA
 		}
 
-		words = append(words, word)
+		workWords = append(workWords, workWord)
+		words[word.ID] = word
 	}
 
-	return &words
+	return &workWords, &words
 }
