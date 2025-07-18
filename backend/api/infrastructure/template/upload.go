@@ -38,6 +38,7 @@ func GetUploadTemplate() string {
 <html>
 	<head>
 		<title>Upload</title>
+		<link rel="icon" href="https://fav.farm/📥" />
 		<style>
 			%s
 			%s

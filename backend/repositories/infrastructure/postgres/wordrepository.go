@@ -28,6 +28,9 @@ func (wr *WordRepository) GetFrequencyListByAuthorID(ctx context.Context, author
 	JOIN author a
 	ON a.id = work.author_id
 	WHERE a.id = $1
+	AND ww.deleted_at IS NULL
+	AND work.deleted_at IS NULL
+	AND a.deleted_at IS NULL
 	GROUP BY w.id, w.lemma_rich, w.known
 	ORDER BY COUNT(ww.word_id) DESC;
 	`
@@ -42,6 +45,8 @@ func (wr *WordRepository) GetFrequencyListByWorkID(ctx context.Context, workID u
 	JOIN word w
 	ON w.id = ww.word_id
 	WHERE ww.work_id = $1
+	AND ww.deleted_at IS NULL
+	AND work.deleted_at IS NULL
 	GROUP BY w.id, w.lemma_rich, w.known
 	ORDER BY COUNT(ww.word_id) DESC;
 	`
@@ -55,7 +60,11 @@ func (wr *WordRepository) GetGlossaryByWorkID(ctx context.Context, workID uuid.U
 	FROM work_word ww
 	JOIN word w
 	ON w.id = ww.word_id
+	JOIN work
+	ON work.id = ww.work_id
 	WHERE ww.work_id = $1
+	AND ww.deleted_at IS NULL
+	AND work.deleted_at IS NULL
 	ORDER BY ww.word_index ASC;
 	`
 

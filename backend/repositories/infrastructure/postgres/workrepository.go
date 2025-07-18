@@ -18,12 +18,72 @@ func NewWorkRepository(db *database.Client) *WorkRepository {
 	return &WorkRepository{db: db}
 }
 
+func (wr *WorkRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	tx, err := wr.db.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	q := `
+	UPDATE work
+	SET deleted_at = NOW()
+	WHERE id = $1
+	AND deleted_at IS NULL;
+	`
+
+	_, err = tx.Exec(ctx, q, id)
+	if err != nil {
+		return fmt.Errorf("failed to execute work query: %w", err)
+	}
+
+	q = `
+	UPDATE work_word
+	SET deleted_at = NOW()
+	WHERE work_id = $1
+	AND deleted_at IS NULL;
+	`
+
+	_, err = tx.Exec(ctx, q, id)
+	if err != nil {
+		return fmt.Errorf("failed to execute work_word query: %w", err)
+	}
+
+	q = `
+	UPDATE author
+	SET deleted_at = NOW()
+	WHERE id = (
+	    SELECT author_id FROM work WHERE id = $1
+	)
+	AND NOT EXISTS (
+	    SELECT 1 FROM work
+	    WHERE author_id = (
+	        SELECT author_id FROM work WHERE id = $1
+	    )
+	    AND deleted_at IS NULL
+	)
+	AND deleted_at IS NULL;
+	`
+
+	_, err = tx.Exec(ctx, q, id)
+	if err != nil {
+		return fmt.Errorf("failed to execute author query: %w", err)
+	}
+
+	tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
 func (wr *WorkRepository) Get(ctx context.Context) ([]domain.Work, error) {
 	q := `
 	SELECT w.id, a.id, a.name, w.title
 	FROM work w
 	JOIN author a
-	ON a.id = w.author_id;
+	ON a.id = w.author_id
+	WHERE w.deleted_at IS NULL;
 	`
 
 	works := []domain.Work{}
@@ -59,7 +119,8 @@ func (wr *WorkRepository) GetByID(ctx context.Context, id uuid.UUID) (domain.Wor
 	FROM work w
 	JOIN author a
 	ON a.id = w.author_id
-	WHERE w.id = $1;
+	WHERE w.id = $1
+	AND w.deleted_at IS NULL;
 	`
 
 	var work domain.Work

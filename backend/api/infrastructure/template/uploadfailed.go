@@ -21,6 +21,7 @@ func GetFailedWorkUploadTemplate(message string, err error) string {
 	<head>
 		<meta charset="UTF-8" />
 		<title>Upload failed</title>
+		<link rel="icon" href="https://fav.farm/❌" />
 		<style>
 			%s
 			%s

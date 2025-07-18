@@ -15,6 +15,7 @@ func GetSuccessfulWorkUploadTemplate() string {
 	<head>
 		<meta charset="UTF-8" />
 		<title>Upload successful</title>
+		<link rel="icon" href="https://fav.farm/✅" />
 		{{if not .Logs}}
 			<meta http-equiv="refresh" content="5;url=/" />
 		{{end}}

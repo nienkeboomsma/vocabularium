@@ -23,7 +23,8 @@ func (ar *AuthorRepository) GetByID(ctx context.Context, id uuid.UUID) (domain.A
 	q := `
 	SELECT id, name, created_at, modified_at, deleted_at
 	FROM author
-	WHERE id = $1;
+	WHERE id = $1
+	AND deleted_at IS NULL;
 	`
 
 	var author domain.Author

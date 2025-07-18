@@ -53,6 +53,7 @@ func main() {
 	mux.HandleFunc("GET /", api.GetWorks())
 
 	mux.HandleFunc("POST /lemmatise", api.Lemmatise())
+	mux.HandleFunc("POST /delete/{id}", api.DeleteWork())
 	mux.HandleFunc("POST /toggle-known-status/{id}", api.ToggleKnownStatus())
 
 	// TODO: set ports via .env

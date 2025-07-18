@@ -40,9 +40,29 @@ func NewAPI(
 	}
 }
 
+func (a *API) DeleteWork() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := uuid.Parse(r.PathValue("id"))
+		if err != nil {
+			fmt.Println(id)
+			http.Error(w, "Invalid UUID", http.StatusBadRequest)
+			return
+		}
+
+		err = a.workRepository.Delete(r.Context(), id)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Failed to delete work", http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
 func (a *API) GetFrequencyListByAuthor() http.HandlerFunc {
 	return handleWordList(
-		template.GetWordListTemplate("Frequency list"),
+		template.GetWordListTemplate("Frequency list", "📈"),
 		func(ctx context.Context, id uuid.UUID) (domain.Work, error) {
 			author, err := a.authorRepository.GetByID(ctx, id)
 			if err != nil {
@@ -59,7 +79,7 @@ func (a *API) GetFrequencyListByAuthor() http.HandlerFunc {
 
 func (a *API) GetFrequencyListByWork() http.HandlerFunc {
 	return handleWordList(
-		template.GetWordListTemplate("Frequency list"),
+		template.GetWordListTemplate("Frequency list", "📈"),
 		a.workRepository.GetByID,
 		a.wordRepository.GetFrequencyListByWorkID,
 	)
@@ -67,7 +87,7 @@ func (a *API) GetFrequencyListByWork() http.HandlerFunc {
 
 func (a *API) GetGlossaryByWork() http.HandlerFunc {
 	return handleWordList(
-		template.GetWordListTemplate("Glossary"),
+		template.GetWordListTemplate("Glossary", "📖"),
 		a.workRepository.GetByID,
 		a.wordRepository.GetGlossaryByWorkID,
 	)
@@ -154,8 +174,8 @@ func (a *API) Lemmatise() http.HandlerFunc {
 			return
 		}
 
-		for _, log := range logs {
-			log = t.HTMLEscapeString(log)
+		for i, log := range logs {
+			logs[i] = t.HTMLEscapeString(log)
 		}
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")

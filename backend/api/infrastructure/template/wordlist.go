@@ -22,7 +22,7 @@ var wordListStyles = `
 }
 `
 
-func GetWordListTemplate(title string) string {
+func GetWordListTemplate(listType, emoji string) string {
 	template := `
 <!DOCTYPE html>
 <html>
@@ -33,6 +33,7 @@ func GetWordListTemplate(title string) string {
     		{{end}}
        		{{.Author}}
         </title>
+      		<link rel="icon" href="https://fav.farm/%s" />
 		<style>
 			%s
 			%s
@@ -57,7 +58,7 @@ func GetWordListTemplate(title string) string {
 						<th>Lemma</th>
 						<th>Translation</th>
 						<th>Count</th>
-						<th>Mark</th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -96,15 +97,16 @@ func GetWordListTemplate(title string) string {
 				const response = await fetch(url, { method: "POST" });
 
 				if (!response.ok) {
-					console.error("Update failed");
-					return;
+	  				button.textContent = "👎🏻";
+					button.title = "Failed to mark words as " + newKnown ? "known" : "unknown" + "; click to try again";
 				}
 
 				button.textContent = newKnown ? "❌" : "✅";
 				button.setAttribute("data-known", newKnown.toString());
 				button.setAttribute("title", "Mark word as " + newKnown ? "unknown" : "known");
 			} catch (error) {
-				console.error("Request failed", error);
+				button.textContent = "👎🏻";
+				button.title = "Failed to mark words as " + newKnown ? "known" : "unknown" + "; click to try again";
 			}
 		}
 
@@ -130,5 +132,5 @@ func GetWordListTemplate(title string) string {
 	</script>
 </html>
 `
-	return fmt.Sprintf(template, baseStyles, tableStyles, wordListStyles, title)
+	return fmt.Sprintf(template, emoji, baseStyles, tableStyles, wordListStyles, listType)
 }
