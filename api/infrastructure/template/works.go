@@ -31,6 +31,7 @@ table tbody tr:nth-child(even) {
 
 td, th {
 	padding: 0.3rem 0.6rem 0.4rem;
+	vertical-align: top;
 }
 
 td:not(:last-child):has(a),

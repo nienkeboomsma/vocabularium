@@ -2,7 +2,7 @@
 
 ## Features
 
-A web interface for the [Collatinus](https://github.com/biblissima/collatinus) Latin lemmatiser. It extracts all the lemmas from uploaded texts and compiles frequency lists (by work or by author) or glossaries. Words can be marked as 'known' and filtered out of these vocabulary lists. Available in all languages supported by Collatinus (which are Basque, Catalan, Dutch, English, French, Galician, German, Italian, Portuguese and Spanish).
+A web interface for the [Collatinus](https://github.com/biblissima/collatinus) Latin lemmatiser. It extracts all the lemmas from uploaded texts and compiles frequency lists (by work or by author) or glossaries. Words can be marked as 'known' and filtered out of all lists. Available in all languages supported by Collatinus (which are Basque, Catalan, Dutch, English, French, Galician, German, Italian, Portuguese and Spanish).
 
 ## Installation
 

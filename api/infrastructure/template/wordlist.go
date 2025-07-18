@@ -87,29 +87,6 @@ func GetWordListTemplate(listType, emoji string) string {
 		</div>
 	</body>
 	<script>
-		async function toggleKnown(button) {
-			const id = button.getAttribute("data-id");
-			const currentKnown = button.getAttribute("data-known") === "true";
-			const newKnown = !currentKnown;
-			const url = "http://localhost:4321/toggle-known-status/" + id;
-
-			try {
-				const response = await fetch(url, { method: "POST" });
-
-				if (!response.ok) {
-	  				button.textContent = "👎🏻";
-					button.title = "Failed to mark words as " + newKnown ? "known" : "unknown" + "; click to try again";
-				}
-
-				button.textContent = newKnown ? "❌" : "✅";
-				button.setAttribute("data-known", newKnown.toString());
-				button.setAttribute("title", "Mark word as " + newKnown ? "unknown" : "known");
-			} catch (error) {
-				button.textContent = "👎🏻";
-				button.title = "Failed to mark words as " + newKnown ? "known" : "unknown" + "; click to try again";
-			}
-		}
-
 		const currentURL = new URL(window.location.href);
 		const currentPath = currentURL.pathname;
 
@@ -129,6 +106,43 @@ func GetWordListTemplate(listType, emoji string) string {
 		const toggleLink = document.getElementById("toggle-link");
 		toggleLink.href = newURL.href;
 		toggleLink.textContent = text;
+
+		async function toggleKnown(button) {
+			const id = button.getAttribute("data-id");
+			const currentKnown = button.getAttribute("data-known") === "true";
+			const newKnown = !currentKnown;
+			const url = "http://localhost:4321/toggle-known-status/" + id;
+
+			try {
+				const response = await fetch(url, { method: "POST" });
+
+				if (!response.ok) {
+	  				button.textContent = "👎🏻";
+					button.title = "Failed to mark words as " + (newKnown ? "known" : "unknown") + "; click to try again";
+					return;
+				}
+
+				if (newKnown && currentPath.includes("true")) {
+					const matchingButtons = document.querySelectorAll('button[data-id="' + id + '"]');
+					matchingButtons.forEach(btn => {
+						const row = btn.closest("tr");
+						if (row) row.remove();
+					});
+					return;
+				}
+
+				const matchingButtons = document.querySelectorAll('button[data-id="' + id + '"]');
+				matchingButtons.forEach(btn => {
+					btn.textContent = newKnown ? "❌" : "✅";
+					btn.setAttribute("data-known", newKnown.toString());
+					btn.setAttribute("title", "Mark word as " + newKnown ? "unknown" : "known");
+				});
+
+			} catch (error) {
+				button.textContent = "👎🏻";
+				button.title = "Failed to mark words as " + (newKnown ? "known" : "unknown") + "; click to try again";
+			}
+		}
 	</script>
 </html>
 `
