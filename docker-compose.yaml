@@ -1,8 +1,8 @@
 services:
-  backend:
+  vocabularium:
     build:
-      context: ./backend
-    container_name: backend
+      context: .
+    container_name: vocabularium
     depends_on:
       database:
         condition: service_healthy
@@ -11,12 +11,10 @@ services:
       COLLATINUS_LANGUAGE: ${COLLATINUS_LANGUAGE}
       DB_URL: ${DB_URL}
     networks:
-      - backend
+      - vocabularium
     ports:
       - "4321:4321"
     restart: always
-    volumes:
-      - ./backend:/app/server
   database:
     container_name: database
     image: postgres:17
@@ -29,7 +27,7 @@ services:
       retries: 999999
       start_period: 3s
     networks:
-      - backend
+      - vocabularium
     ports:
       - 5432:5432
     restart: always
@@ -37,7 +35,7 @@ services:
       - database:/var/lib/postgresql/data
 
 networks:
-  backend:
+  vocabularium:
 
 volumes:
   database:
