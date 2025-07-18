@@ -53,6 +53,40 @@ func (wr *WorkRepository) Get(ctx context.Context) ([]domain.Work, error) {
 	return works, nil
 }
 
+func (wr *WorkRepository) GetByID(ctx context.Context, id uuid.UUID) (domain.Work, error) {
+	q := `
+	SELECT w.id, a.name, w.title, w.type, w.created_at, w.modified_at, w.deleted_at
+	FROM work w
+	JOIN author a
+	ON a.id = w.author_id
+	WHERE w.id = $1;
+	`
+
+	var work domain.Work
+	var deleted sql.NullTime
+
+	err := wr.db.Pool.QueryRow(
+		ctx,
+		q,
+		id,
+	).Scan(
+		&work.ID,
+		&work.Author.Name,
+		&work.Title,
+		&work.Type,
+		&work.Created,
+		&work.Modified,
+		&deleted,
+	)
+	if err != nil {
+		return domain.Work{}, err
+	}
+
+	work.Deleted = deleted.Time
+
+	return work, nil
+}
+
 func (wr *WorkRepository) Save(ctx context.Context, db database.Executor, w domain.Work, authorID uuid.UUID) (domain.Work, error) {
 	q := `
 	INSERT INTO work (id, author_id, title, type, modified_at, deleted_at)

@@ -26,7 +26,7 @@ docker compose down
 ## Usage
 
 ### Adding a work
-Send a POST request to `localhost:4321/lemmatise` with the following `multipart/form-data` fields:
+Send a POST request to `http://localhost:4321/lemmatise` with the following `multipart/form-data` fields:
 
 | Field    | Type                   |
 | -------- | ---------------------- |
@@ -45,3 +45,7 @@ curl -X POST \
   -F "type=verse" \
   http://localhost:4321/lemmatise
 ```
+
+### Browsing
+
+Open `http://localhost:4321/works` in your browser.

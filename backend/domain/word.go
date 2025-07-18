@@ -17,3 +17,8 @@ type Word struct {
 	Modified         time.Time
 	Deleted          time.Time
 }
+
+type WordInWork struct {
+	Word
+	Count int
+}

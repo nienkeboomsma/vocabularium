@@ -35,24 +35,24 @@ func main() {
 		log.Fatal("Failed to run database migrations: " + err.Error())
 	}
 
-	authorRepository := repositories.NewAuthorRepository()
+	authorRepository := repositories.NewAuthorRepository(db)
 	workRepository := repositories.NewWorkRepository(db)
-	wordRepository := repositories.NewWordRepository()
+	wordRepository := repositories.NewWordRepository(db)
 	workWordRepository := repositories.NewWorkWordRepository()
 
 	wp := postgres.NewWorkPersister(db, authorRepository, workRepository, wordRepository, workWordRepository)
 
-	api := api.NewAPI(tp, wp, workRepository)
+	api := api.NewAPI(tp, wp, authorRepository, wordRepository, workRepository)
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /frequency-list/{id}", api.GetFrequencyListByWork())
-	mux.HandleFunc("GET /frequency-list-author/{id}", api.GetFrequencyListByAuthor())
-	mux.HandleFunc("GET /glossary/{id}", api.GetGlossaryByWork())
+	mux.HandleFunc("GET /frequency-list/{id}/{skipKnown}", api.GetFrequencyListByWork())
+	mux.HandleFunc("GET /frequency-list-author/{id}/{skipKnown}", api.GetFrequencyListByAuthor())
+	mux.HandleFunc("GET /glossary/{id}/{skipKnown}", api.GetGlossaryByWork())
 	mux.HandleFunc("GET /works", api.GetWorks())
 
 	mux.HandleFunc("POST /lemmatise", api.Lemmatise())
-	mux.HandleFunc("POST /update-word-status", api.UpdateWordStatus())
+	mux.HandleFunc("POST /toggle-known-status/{id}", api.ToggleKnownStatus())
 
 	// TODO: set ports via .env
 	fmt.Println("Listening at :4321")

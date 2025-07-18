@@ -8,5 +8,5 @@ type API interface {
 	GetGlossaryByWork() http.HandlerFunc        // for a workID, return list of words per work, ordered by wordIndex
 	GetWorks() http.HandlerFunc                 // return list of works and their authors
 	Lemmatise() http.HandlerFunc
-	UpdateWordStatus() http.HandlerFunc // for a wordID, update the known status to either 'true' or 'false'
+	ToggleKnownStatus() http.HandlerFunc // for a wordID, update the known status to either 'true' or 'false'
 }

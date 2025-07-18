@@ -1,11 +1,13 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"text/template"
 
+	"github.com/google/uuid"
 	"github.com/nienkeboomsma/collatinus/database"
 	"github.com/nienkeboomsma/collatinus/domain"
 	repositories "github.com/nienkeboomsma/collatinus/repositories/ports/driving"
@@ -14,34 +16,61 @@ import (
 )
 
 type API struct {
-	textProcessor  driven.TextProcessor
-	workPersister  driving.WorkPersister
-	workRepository repositories.WorkRepository
+	textProcessor    driven.TextProcessor
+	workPersister    driving.WorkPersister
+	authorRepository repositories.AuthorRepository
+	wordRepository   repositories.WordRepository
+	workRepository   repositories.WorkRepository
 }
 
 func NewAPI(
 	tp driven.TextProcessor,
 	wp driving.WorkPersister,
-	wr repositories.WorkRepository,
+	authorRepository repositories.AuthorRepository,
+	wordRepository repositories.WordRepository,
+	workRepository repositories.WorkRepository,
 ) *API {
 	return &API{
-		textProcessor:  tp,
-		workPersister:  wp,
-		workRepository: wr,
+		textProcessor:    tp,
+		workPersister:    wp,
+		authorRepository: authorRepository,
+		wordRepository:   wordRepository,
+		workRepository:   workRepository,
 	}
 }
 
-func (a *API) GetFrequencyListByWork() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-} // for a workID, return list of words per work, grouped by wordID, ordered by count(wordID)
-
 func (a *API) GetFrequencyListByAuthor() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-} // for an authorID, return list of words across all works, grouped by wordID, ordered by count(wordID)
+	return handleWordList(
+		getWordListTemplate("Frequency list"),
+		func(ctx context.Context, id uuid.UUID) (domain.Work, error) {
+			author, err := a.authorRepository.GetByID(ctx, id)
+			if err != nil {
+				return domain.Work{}, err
+			}
+
+			return domain.Work{Author: domain.Author{
+				Name: author.Name,
+			}}, nil
+		},
+		a.wordRepository.GetFrequencyListByAuthorID,
+	)
+}
+
+func (a *API) GetFrequencyListByWork() http.HandlerFunc {
+	return handleWordList(
+		getWordListTemplate("Frequency list"),
+		a.workRepository.GetByID,
+		a.wordRepository.GetFrequencyListByWorkID,
+	)
+}
 
 func (a *API) GetGlossaryByWork() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-} // for a workID, return list of words per work, ordered by wordIndex
+	return handleWordList(
+		getWordListTemplate("Glossary"),
+		a.workRepository.GetByID,
+		a.wordRepository.GetGlossaryByWorkID,
+	)
+}
 
 func (a *API) GetWorks() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -51,37 +80,7 @@ func (a *API) GetWorks() http.HandlerFunc {
 			return
 		}
 
-		workListTemplate := `
-<!DOCTYPE html>
-<html>
-<head><title>Works</title></head>
-<body>
-	<h1>Works</h1>
-	<table>
-		<thead>
-			<tr>
-				<th colspan="2">Author</th>
-				<th colspan="3">Title</th>
-				<th>Type</th>
-			</tr>
-		</thead>
-		<tbody>
-		{{range .}}
-			<tr>
-				<td>{{.Author.Name}}</td>
-				<td><a href="http://localhost:4321/frequency-list-author/{{.Author.ID}}">frequency list</a></td>
-				<td>{{.Title}}</td>
-				<td><a href="http://localhost:4321/frequency-list/{{.ID}}">frequency list</a></td>
-				<td><a href="http://localhost:4321/glossary/{{.ID}}">glossary</a></td>
-				<td>{{.Type}}</td>
-			</tr>
-		{{else}}
-			<tr><td colspan="3">No works to display</td></tr>
-		{{end}}
-		</tbody>
-	</table>
-</body>
-</html>`
+		workListTemplate := getWorkListTemplate()
 
 		tmpl, err := template.New("works").Parse(workListTemplate)
 		if err != nil {
@@ -131,10 +130,83 @@ func (a *API) Lemmatise() http.HandlerFunc {
 			return
 		}
 
-		w.Write([]byte("Done!"))
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func (a *API) UpdateWordStatus() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-} // for a wordID, update the known status to either 'true' or 'false'
+func (a *API) ToggleKnownStatus() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := uuid.Parse(r.PathValue("id"))
+		if err != nil {
+			http.Error(w, "Invalid UUID", http.StatusBadRequest)
+			return
+		}
+
+		_, err = a.wordRepository.ToggleKnownStatus(r.Context(), id)
+		if err != nil {
+			http.Error(w, "Failed to save updated known status", http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func handleWordList(
+	htmlTemplate string,
+	workCallback func(ctx context.Context, id uuid.UUID) (domain.Work, error),
+	wordCallback func(ctx context.Context, id uuid.UUID) (*[]domain.WordInWork, error),
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := uuid.Parse(r.PathValue("id"))
+		if err != nil {
+			http.Error(w, "Invalid UUID", http.StatusBadRequest)
+			return
+		}
+
+		work, err := workCallback(r.Context(), id)
+		if err != nil {
+			http.Error(w, "Failed to retrieve work", http.StatusBadRequest)
+			return
+		}
+
+		words, err := wordCallback(r.Context(), id)
+		if err != nil {
+			http.Error(w, "Failed to retrieve words", http.StatusBadRequest)
+			return
+		}
+
+		if r.PathValue("skipKnown") == "true" {
+			filteredWords := []domain.WordInWork{}
+
+			for _, word := range *words {
+				if word.Known {
+					continue
+				}
+
+				filteredWords = append(filteredWords, word)
+			}
+
+			words = &filteredWords
+		}
+
+		pageData := WordListPageData{
+			Title:  work.Title,
+			Author: work.Author.Name,
+			Words:  words,
+		}
+
+		tmpl, err := template.New("words").Parse(htmlTemplate)
+		if err != nil {
+			http.Error(w, "Failed to allocate HTML template", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		err = tmpl.Execute(w, pageData)
+		if err != nil {
+			http.Error(w, "Failed to render HTML template", http.StatusInternalServerError)
+			return
+		}
+	}
+}
