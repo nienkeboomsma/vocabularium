@@ -44,6 +44,8 @@ func (wr *WordRepository) GetFrequencyListByWorkID(ctx context.Context, workID u
 	FROM work_word ww
 	JOIN word w
 	ON w.id = ww.word_id
+	JOIN work
+	ON work.id = ww.work_id
 	WHERE ww.work_id = $1
 	AND ww.deleted_at IS NULL
 	AND work.deleted_at IS NULL
