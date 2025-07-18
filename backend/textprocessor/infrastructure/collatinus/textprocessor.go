@@ -63,7 +63,7 @@ func NewTextProcessor(language string) (*TextProcessor, error) {
 	}, nil
 }
 
-func (tp *TextProcessor) Process(input []byte) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word, error) {
+func (tp *TextProcessor) Process(input []byte) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word, []string, error) {
 	sanitised := sanitise(input)
 
 	chunks := chunkBySentence(sanitised)
@@ -72,10 +72,10 @@ func (tp *TextProcessor) Process(input []byte) (*[]domain.WorkWord, *map[uuid.UU
 
 	err := lemmatise(chunks, &total, LanguageEN)
 	if err != nil {
-		return &[]domain.WorkWord{}, &map[uuid.UUID]domain.Word{}, fmt.Errorf("failed to lemmatise: %w", err)
+		return &[]domain.WorkWord{}, &map[uuid.UUID]domain.Word{}, []string{}, fmt.Errorf("failed to lemmatise: %w", err)
 	}
 
-	workWords, words := mapToWords(&total)
+	workWords, words, logs := mapToWords(&total)
 
-	return workWords, words, nil
+	return workWords, words, logs, nil
 }

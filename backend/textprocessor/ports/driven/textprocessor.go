@@ -6,5 +6,5 @@ import (
 )
 
 type TextProcessor interface {
-	Process([]byte) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word, error)
+	Process([]byte) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word, []string, error)
 }

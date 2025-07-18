@@ -339,7 +339,7 @@ func TestMapper(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			workWords, words := mapToWords(test.input)
+			workWords, words, _ := mapToWords(test.input)
 			assert.Equal(t, test.expectedWorkWords, workWords)
 			assert.Equal(t, test.expectedWords, words)
 		})

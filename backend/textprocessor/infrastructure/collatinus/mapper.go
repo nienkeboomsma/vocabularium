@@ -13,9 +13,10 @@ import (
 	"github.com/nienkeboomsma/collatinus/domain"
 )
 
-func mapToWords(input io.Reader) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word) {
+func mapToWords(input io.Reader) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word, []string) {
 	workWords := []domain.WorkWord{}
 	words := make(map[uuid.UUID]domain.Word)
+	logs := []string{}
 
 	scanner := bufio.NewScanner(input)
 
@@ -36,13 +37,13 @@ func mapToWords(input io.Reader) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word
 		wordCount++
 
 		if len(cols) != 10 && !slices.Contains(cols, "unknown") {
-			fmt.Printf("⚠️ SKIPPED %d: malformed line: %#v\n", wordCount, cols)
+			logs = append(logs, fmt.Sprintf("⚠️ SKIPPED word #%d: malformed line: %#v", wordCount, cols))
 			continue
 		}
 
 		wordIndexInSentence, err := strconv.Atoi(cols[2])
 		if err != nil {
-			fmt.Printf("⚠️ SKIPPED %d: failed to convert word index in sentence string to integer: %#v\n", wordCount, cols[2])
+			logs = append(logs, fmt.Sprintf("⚠️ SKIPPED word #%d: failed to convert word index in sentence string to integer: %#v", wordCount, cols[2]))
 			continue
 		}
 
@@ -78,7 +79,7 @@ func mapToWords(input io.Reader) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word
 		if cols[7] != "" {
 			frequencyInLASLA, err := strconv.Atoi(cols[7])
 			if err != nil {
-				fmt.Printf("⚠️ SKIPPED %d: failed to convert frequency in LASLA string to integer: %#v\n", wordCount, cols[7])
+				logs = append(logs, fmt.Sprintf("⚠️ SKIPPED word #%d: failed to convert frequency in LASLA string to integer: %#v", wordCount, cols[7]))
 				continue
 			}
 
@@ -89,5 +90,5 @@ func mapToWords(input io.Reader) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word
 		words[word.ID] = word
 	}
 
-	return &workWords, &words
+	return &workWords, &words, logs
 }

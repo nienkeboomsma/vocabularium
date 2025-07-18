@@ -102,8 +102,8 @@ func (a *API) Lemmatise() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		file, _, err := r.FormFile("file")
 		if err != nil {
-			errorHTML := template.GetFailedWorkUploadTemplate("Failed to get uploaded file from the request.", err)
-			w.Header().Set("Content-Type", "text/html")
+			errorHTML := template.GetFailedWorkUploadTemplate("Failed to get uploaded file from the request", err)
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, errorHTML)
 			return
@@ -112,8 +112,8 @@ func (a *API) Lemmatise() http.HandlerFunc {
 
 		uploadedData, err := io.ReadAll(file)
 		if err != nil {
-			errorHTML := template.GetFailedWorkUploadTemplate("Failed to read the contents of the uploaded file.", err)
-			w.Header().Set("Content-Type", "text/html")
+			errorHTML := template.GetFailedWorkUploadTemplate("Failed to read the contents of the uploaded file", err)
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, errorHTML)
 			return
@@ -128,10 +128,10 @@ func (a *API) Lemmatise() http.HandlerFunc {
 			Title: r.FormValue("title"),
 		}
 
-		workWords, words, err := a.textProcessor.Process(uploadedData)
+		workWords, words, logs, err := a.textProcessor.Process(uploadedData)
 		if err != nil {
-			errorHTML := template.GetFailedWorkUploadTemplate("Failed to process the uploaded text.", err)
-			w.Header().Set("Content-Type", "text/html")
+			errorHTML := template.GetFailedWorkUploadTemplate("Failed to process the uploaded text", err)
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, errorHTML)
 			return
@@ -139,8 +139,8 @@ func (a *API) Lemmatise() http.HandlerFunc {
 
 		err = a.workPersister.Persist(r.Context(), author, work, words, workWords)
 		if err != nil {
-			errorHTML := template.GetFailedWorkUploadTemplate("Failed to save the work in the database.", err)
-			w.Header().Set("Content-Type", "text/html")
+			errorHTML := template.GetFailedWorkUploadTemplate("Failed to save the work in the database", err)
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, errorHTML)
 			return
@@ -148,9 +148,22 @@ func (a *API) Lemmatise() http.HandlerFunc {
 
 		successTemplate := template.GetSuccessfulWorkUploadTemplate()
 
-		w.Header().Set("Content-Type", "text/html")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, successTemplate)
+		tmpl, err := t.New("works").Parse(successTemplate)
+		if err != nil {
+			http.Error(w, "Failed to allocate HTML template", http.StatusInternalServerError)
+			return
+		}
+
+		for _, log := range logs {
+			log = t.HTMLEscapeString(log)
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		err = tmpl.Execute(w, template.UploadSuccessData{Logs: logs})
+		if err != nil {
+			http.Error(w, "Failed to render HTML template", http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
