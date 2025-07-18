@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/nienkeboomsma/collatinus/database"
-	"github.com/nienkeboomsma/collatinus/domain"
+	"github.com/nienkeboomsma/vocabularium/database"
+	"github.com/nienkeboomsma/vocabularium/domain"
 )
 
 type WorkRepository struct {
@@ -69,7 +69,7 @@ func (wr *WorkRepository) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("failed to execute author query: %w", err)
 	}
 
-	tx.Commit(ctx)
+	err = tx.Commit(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}

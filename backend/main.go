@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"os"
 
-	api "github.com/nienkeboomsma/collatinus/api/infrastructure"
-	"github.com/nienkeboomsma/collatinus/database"
-	repositories "github.com/nienkeboomsma/collatinus/repositories/infrastructure/postgres"
-	"github.com/nienkeboomsma/collatinus/textprocessor/infrastructure/collatinus"
-	"github.com/nienkeboomsma/collatinus/workpersister/infrastructure/postgres"
+	api "github.com/nienkeboomsma/vocabularium/api/infrastructure"
+	"github.com/nienkeboomsma/vocabularium/database"
+	repositories "github.com/nienkeboomsma/vocabularium/repositories/infrastructure/postgres"
+	"github.com/nienkeboomsma/vocabularium/textprocessor/infrastructure/collatinus"
+	"github.com/nienkeboomsma/vocabularium/workpersister/infrastructure/postgres"
 )
 
 func main() {

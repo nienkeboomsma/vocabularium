@@ -6,9 +6,9 @@ import (
 	"reflect"
 
 	"github.com/google/uuid"
-	"github.com/nienkeboomsma/collatinus/database"
-	"github.com/nienkeboomsma/collatinus/domain"
-	"github.com/nienkeboomsma/collatinus/repositories/ports/driving"
+	"github.com/nienkeboomsma/vocabularium/database"
+	"github.com/nienkeboomsma/vocabularium/domain"
+	"github.com/nienkeboomsma/vocabularium/repositories/ports/driving"
 )
 
 type WorkPersister struct {

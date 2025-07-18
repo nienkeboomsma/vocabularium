@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/nienkeboomsma/collatinus/domain"
+	"github.com/nienkeboomsma/vocabularium/domain"
 )
 
 type Language string

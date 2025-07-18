@@ -3,7 +3,7 @@ package template
 import (
 	"fmt"
 
-	"github.com/nienkeboomsma/collatinus/domain"
+	"github.com/nienkeboomsma/vocabularium/domain"
 )
 
 type WordListPageData struct {

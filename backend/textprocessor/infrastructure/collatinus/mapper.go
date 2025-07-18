@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/nienkeboomsma/collatinus/database"
-	"github.com/nienkeboomsma/collatinus/domain"
+	"github.com/nienkeboomsma/vocabularium/database"
+	"github.com/nienkeboomsma/vocabularium/domain"
 )
 
 func mapToWords(input io.Reader) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word, []string) {

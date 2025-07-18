@@ -1,51 +1,33 @@
-# Project name tbd
+# Vocabularium
 
 ## Installation
 
-Create a `.env` file:
+1. Create a `.env` file:
 
 ```sh
 cp .env.example .env
 ```
 
-Make sure to replace the placeholder values.
+2. Make sure to replace the placeholder values.
 
-To build the containers:
+3. Build the containers:
 
 ```sh
 docker compose up --build -d
 ```
 
-Thereafter, use the following commands to start and stop the containers respectively:
+## Usage
+
+1. Start the containers:
 
 ```sh
 docker compose up
-docker compose down
 ```
 
-## Usage
+2. Open `http://localhost:4321` in your browser.
 
-### Adding a work
-Send a POST request to `http://localhost:4321/lemmatise` with the following `multipart/form-data` fields:
-
-| Field    | Type                   |
-| -------- | ---------------------- |
-| `file`   | .txt file              |
-| `author` | string                 |
-| `title`  | string                 |
-| `type`   | `"verse"` or `"prose"` |
-
-With `curl` it would look like this:
+3. Stop the containers:
 
 ```sh
-curl -X POST \
-  -F "file=@./amphitryo.txt" \
-  -F "author=Plautus" \
-  -F "title=Amphitryo" \
-  -F "type=verse" \
-  http://localhost:4321/lemmatise
+docker compose down
 ```
-
-### Browsing
-
-Open `http://localhost:4321` in your browser.

@@ -1,4 +1,4 @@
-module github.com/nienkeboomsma/collatinus
+module github.com/nienkeboomsma/vocabularium
 
 go 1.24
 

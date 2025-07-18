@@ -8,12 +8,12 @@ import (
 	t "text/template"
 
 	"github.com/google/uuid"
-	"github.com/nienkeboomsma/collatinus/api/infrastructure/template"
-	"github.com/nienkeboomsma/collatinus/database"
-	"github.com/nienkeboomsma/collatinus/domain"
-	repositories "github.com/nienkeboomsma/collatinus/repositories/ports/driving"
-	"github.com/nienkeboomsma/collatinus/textprocessor/ports/driven"
-	"github.com/nienkeboomsma/collatinus/workpersister/ports/driving"
+	"github.com/nienkeboomsma/vocabularium/api/infrastructure/template"
+	"github.com/nienkeboomsma/vocabularium/database"
+	"github.com/nienkeboomsma/vocabularium/domain"
+	repositories "github.com/nienkeboomsma/vocabularium/repositories/ports/driving"
+	"github.com/nienkeboomsma/vocabularium/textprocessor/ports/driven"
+	"github.com/nienkeboomsma/vocabularium/workpersister/ports/driving"
 )
 
 type API struct {
