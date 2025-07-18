@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"text/template"
+	t "text/template"
 
 	"github.com/google/uuid"
+	"github.com/nienkeboomsma/collatinus/api/infrastructure/template"
 	"github.com/nienkeboomsma/collatinus/database"
 	"github.com/nienkeboomsma/collatinus/domain"
 	repositories "github.com/nienkeboomsma/collatinus/repositories/ports/driving"
@@ -41,7 +42,7 @@ func NewAPI(
 
 func (a *API) GetFrequencyListByAuthor() http.HandlerFunc {
 	return handleWordList(
-		getWordListTemplate("Frequency list"),
+		template.GetWordListTemplate("Frequency list"),
 		func(ctx context.Context, id uuid.UUID) (domain.Work, error) {
 			author, err := a.authorRepository.GetByID(ctx, id)
 			if err != nil {
@@ -58,7 +59,7 @@ func (a *API) GetFrequencyListByAuthor() http.HandlerFunc {
 
 func (a *API) GetFrequencyListByWork() http.HandlerFunc {
 	return handleWordList(
-		getWordListTemplate("Frequency list"),
+		template.GetWordListTemplate("Frequency list"),
 		a.workRepository.GetByID,
 		a.wordRepository.GetFrequencyListByWorkID,
 	)
@@ -66,7 +67,7 @@ func (a *API) GetFrequencyListByWork() http.HandlerFunc {
 
 func (a *API) GetGlossaryByWork() http.HandlerFunc {
 	return handleWordList(
-		getWordListTemplate("Glossary"),
+		template.GetWordListTemplate("Glossary"),
 		a.workRepository.GetByID,
 		a.wordRepository.GetGlossaryByWorkID,
 	)
@@ -80,9 +81,9 @@ func (a *API) GetWorks() http.HandlerFunc {
 			return
 		}
 
-		workListTemplate := getWorkListTemplate()
+		workListTemplate := template.GetWorkListTemplate()
 
-		tmpl, err := template.New("works").Parse(workListTemplate)
+		tmpl, err := t.New("works").Parse(workListTemplate)
 		if err != nil {
 			http.Error(w, "Failed to allocate HTML template", http.StatusInternalServerError)
 			return
@@ -101,14 +102,20 @@ func (a *API) Lemmatise() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		file, _, err := r.FormFile("file")
 		if err != nil {
-			http.Error(w, "Missing file", http.StatusBadRequest)
+			errorHTML := template.GetFailedWorkUploadTemplate("Failed to get uploaded file from the request.", err)
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, errorHTML)
 			return
 		}
 		defer file.Close()
 
 		uploadedData, err := io.ReadAll(file)
 		if err != nil {
-			http.Error(w, "Failed to read uploaded file", http.StatusBadRequest)
+			errorHTML := template.GetFailedWorkUploadTemplate("Failed to read the contents of the uploaded file.", err)
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, errorHTML)
 			return
 		}
 
@@ -119,18 +126,31 @@ func (a *API) Lemmatise() http.HandlerFunc {
 		work := domain.Work{
 			ID:    database.StringToUUID(fmt.Sprintf("%s_%s", r.FormValue("author"), r.FormValue("title"))),
 			Title: r.FormValue("title"),
-			Type:  domain.WorkType(r.FormValue("type")),
 		}
 
 		workWords, words, err := a.textProcessor.Process(uploadedData)
-
-		err = a.workPersister.Persist(r.Context(), author, work, words, workWords)
 		if err != nil {
-			http.Error(w, "Failed to save work", http.StatusBadRequest)
+			errorHTML := template.GetFailedWorkUploadTemplate("Failed to process the uploaded text.", err)
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, errorHTML)
 			return
 		}
 
+		err = a.workPersister.Persist(r.Context(), author, work, words, workWords)
+		if err != nil {
+			errorHTML := template.GetFailedWorkUploadTemplate("Failed to save the work in the database.", err)
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, errorHTML)
+			return
+		}
+
+		successTemplate := template.GetSuccessfulWorkUploadTemplate()
+
+		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, successTemplate)
 	}
 }
 
@@ -149,6 +169,14 @@ func (a *API) ToggleKnownStatus() http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func (a *API) Upload() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		html := template.GetUploadTemplate()
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write([]byte(html))
 	}
 }
 
@@ -190,13 +218,13 @@ func handleWordList(
 			words = &filteredWords
 		}
 
-		pageData := WordListPageData{
+		pageData := template.WordListPageData{
 			Title:  work.Title,
 			Author: work.Author.Name,
 			Words:  words,
 		}
 
-		tmpl, err := template.New("words").Parse(htmlTemplate)
+		tmpl, err := t.New("words").Parse(htmlTemplate)
 		if err != nil {
 			http.Error(w, "Failed to allocate HTML template", http.StatusInternalServerError)
 			return

@@ -49,7 +49,8 @@ func main() {
 	mux.HandleFunc("GET /frequency-list/{id}/{skipKnown}", api.GetFrequencyListByWork())
 	mux.HandleFunc("GET /frequency-list-author/{id}/{skipKnown}", api.GetFrequencyListByAuthor())
 	mux.HandleFunc("GET /glossary/{id}/{skipKnown}", api.GetGlossaryByWork())
-	mux.HandleFunc("GET /works", api.GetWorks())
+	mux.HandleFunc("GET /upload", api.Upload())
+	mux.HandleFunc("GET /", api.GetWorks())
 
 	mux.HandleFunc("POST /lemmatise", api.Lemmatise())
 	mux.HandleFunc("POST /toggle-known-status/{id}", api.ToggleKnownStatus())

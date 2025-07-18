@@ -20,7 +20,7 @@ func NewWorkRepository(db *database.Client) *WorkRepository {
 
 func (wr *WorkRepository) Get(ctx context.Context) ([]domain.Work, error) {
 	q := `
-	SELECT w.id, a.id, a.name, w.title, w.type
+	SELECT w.id, a.id, a.name, w.title
 	FROM work w
 	JOIN author a
 	ON a.id = w.author_id;
@@ -37,7 +37,7 @@ func (wr *WorkRepository) Get(ctx context.Context) ([]domain.Work, error) {
 	for rows.Next() {
 		work := domain.Work{}
 
-		err = rows.Scan(&work.ID, &work.Author.ID, &work.Author.Name, &work.Title, &work.Type)
+		err = rows.Scan(&work.ID, &work.Author.ID, &work.Author.Name, &work.Title)
 		if err != nil {
 			return []domain.Work{}, fmt.Errorf("failed to scan row: %w", err)
 		}
@@ -55,7 +55,7 @@ func (wr *WorkRepository) Get(ctx context.Context) ([]domain.Work, error) {
 
 func (wr *WorkRepository) GetByID(ctx context.Context, id uuid.UUID) (domain.Work, error) {
 	q := `
-	SELECT w.id, a.name, w.title, w.type, w.created_at, w.modified_at, w.deleted_at
+	SELECT w.id, a.name, w.title, w.created_at, w.modified_at, w.deleted_at
 	FROM work w
 	JOIN author a
 	ON a.id = w.author_id
@@ -73,7 +73,6 @@ func (wr *WorkRepository) GetByID(ctx context.Context, id uuid.UUID) (domain.Wor
 		&work.ID,
 		&work.Author.Name,
 		&work.Title,
-		&work.Type,
 		&work.Created,
 		&work.Modified,
 		&deleted,
@@ -89,11 +88,11 @@ func (wr *WorkRepository) GetByID(ctx context.Context, id uuid.UUID) (domain.Wor
 
 func (wr *WorkRepository) Save(ctx context.Context, db database.Executor, w domain.Work, authorID uuid.UUID) (domain.Work, error) {
 	q := `
-	INSERT INTO work (id, author_id, title, type, modified_at, deleted_at)
-	VALUES ($1, $2, $3, $4, DEFAULT, $5)
+	INSERT INTO work (id, author_id, title, modified_at, deleted_at)
+	VALUES ($1, $2, $3, DEFAULT, $4)
 	ON CONFLICT (author_id, title) DO UPDATE
-	SET type = $4, modified_at = DEFAULT, deleted_at = $5
-	RETURNING id, author_id, title, type, created_at, modified_at, deleted_at;
+	SET modified_at = DEFAULT, deleted_at = $4
+	RETURNING id, author_id, title, created_at, modified_at, deleted_at;
 	`
 
 	deleted := sql.NullTime{
@@ -109,13 +108,11 @@ func (wr *WorkRepository) Save(ctx context.Context, db database.Executor, w doma
 		w.ID,
 		authorID,
 		w.Title,
-		w.Type,
 		deleted,
 	).Scan(
 		&updatedWork.ID,
 		&authorID,
 		&updatedWork.Title,
-		&updatedWork.Type,
 		&updatedWork.Created,
 		&updatedWork.Modified,
 		&deleted,

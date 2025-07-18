@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS work (
     id UUID PRIMARY KEY,
     author_id UUID NOT NULL REFERENCES author(id),
     title TEXT NOT NULL,
-    type TEXT NOT NULL CHECK (type IN ('verse', 'prose')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ,

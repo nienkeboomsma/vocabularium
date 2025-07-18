@@ -48,4 +48,4 @@ curl -X POST \
 
 ### Browsing
 
-Open `http://localhost:4321/works` in your browser.
+Open `http://localhost:4321` in your browser.
