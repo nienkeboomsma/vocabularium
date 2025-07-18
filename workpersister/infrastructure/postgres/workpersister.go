@@ -46,7 +46,7 @@ func (wp *WorkPersister) Persist(ctx context.Context, author domain.Author, work
 	updatedWork, err := wp.workRepository.Save(ctx, tx, work, updatedAuthor.ID)
 
 	for _, word := range *words {
-		_, err := wp.wordRepository.Save(ctx, tx, word)
+		_, err := wp.wordRepository.Insert(ctx, tx, word)
 		if err != nil {
 			return fmt.Errorf("failed to save word: %w", err)
 		}

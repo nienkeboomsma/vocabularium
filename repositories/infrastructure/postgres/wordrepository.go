@@ -73,12 +73,12 @@ func (wr *WordRepository) GetGlossaryByWorkID(ctx context.Context, workID uuid.U
 	return wr.getWordListByWorkID(ctx, q, workID)
 }
 
-func (wr *WordRepository) Save(ctx context.Context, db database.Executor, w domain.Word) (domain.Word, error) {
+func (wr *WordRepository) Insert(ctx context.Context, db database.Executor, w domain.Word) (domain.Word, error) {
 	q := `
 	INSERT INTO word (id, lemma_raw, lemma_rich, translation, lasla_frequency, known, modified_at, deleted_at)
 	VALUES ($1, $2, $3, $4, $5, $6, DEFAULT, $7)
 	ON CONFLICT (lemma_raw, lemma_rich) DO UPDATE
-	SET translation = $4, known = $6, modified_at = DEFAULT, deleted_at = $7
+	SET translation = $4, modified_at = DEFAULT, deleted_at = $7
 	RETURNING id, lemma_raw, lemma_rich, translation, lasla_frequency, known, created_at, modified_at, deleted_at;
 	`
 
