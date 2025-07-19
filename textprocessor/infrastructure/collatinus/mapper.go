@@ -36,12 +36,12 @@ func mapToWords(input io.Reader) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word
 
 		wordCount++
 
-		if slices.Contains(cols, "unknown") {
-			logs = append(logs, fmt.Sprintf("⚠️ SKIPPED word #%d: translation unknown: %#v", wordCount, cols))
-			continue
-		}
-
 		if len(cols) != 10 {
+			if slices.Contains(cols, "unknown") {
+				logs = append(logs, fmt.Sprintf("⚠️ SKIPPED word #%d: translation unknown: %#v", wordCount, cols))
+				continue
+			}
+
 			logs = append(logs, fmt.Sprintf("⚠️ SKIPPED word #%d: malformed line: %#v", wordCount, cols))
 			continue
 		}
