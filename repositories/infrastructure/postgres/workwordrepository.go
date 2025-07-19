@@ -20,7 +20,8 @@ func (wr *WorkWordRepository) Save(ctx context.Context, db database.Executor, ww
 	q := `
 	INSERT INTO work_word (id, work_id, word_id, word_index, sentence_index, original_form, tag, morph_analysis, modified_at, deleted_at)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, DEFAULT, $9)
-	ON CONFLICT (work_id, word_index) DO NOTHING
+	ON CONFLICT (work_id, word_index) DO UPDATE
+	SET sentence_index = $5, original_form = $6, tag = $7, morph_analysis = $8, modified_at = DEFAULT, deleted_at = $9
 	RETURNING id, work_id, word_id, word_index, sentence_index, original_form, tag, morph_analysis, created_at, modified_at, deleted_at;
 	`
 
