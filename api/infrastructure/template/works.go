@@ -118,9 +118,8 @@ func GetWorkListTemplate() string {
 					return;
 				}
 
-				button.textContent = "👍🏻";
-				button.disabled = true;
-				button.title = "Work deleted";
+				const row = button.closest("tr");
+				if (row) row.remove();
 		    } catch (error) {
   				button.textContent = "👎🏻";
 				button.title = "Failed to delete work; click to try again";
