@@ -15,11 +15,14 @@ nav {
 nav a,
 table a,
 table button {
+	all: initial;
 	background: none;
 	border: none;
 	border-radius: 4px;
 	color: black;
 	cursor: pointer;
+	font-family: inherit;
+	margin: -0.25rem -0.35rem;
 	padding: 0.25rem 0.35rem;
 	text-decoration-line: none;
 	transition: 0.2s ease;

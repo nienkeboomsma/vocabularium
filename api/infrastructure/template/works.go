@@ -34,14 +34,9 @@ td, th {
 	vertical-align: top;
 }
 
-td:not(:last-child):has(a),
-td:not(:last-child):has(button) {
-	padding: 0 0.2rem 0;
-}
-
-td:last-child:has(a),
-td:last-child:has(button) {
-	padding: 0 0.35rem 0 0.2rem;
+td:has(a),
+td:has(button) {
+	padding-left: 0.2rem;
 }
 `
 
