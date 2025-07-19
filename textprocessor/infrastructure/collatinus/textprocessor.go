@@ -73,7 +73,7 @@ func (tp *TextProcessor) Process(input []byte) (*[]domain.WorkWord, *map[uuid.UU
 
 	var total bytes.Buffer
 
-	err = lemmatise(chunks, &total, LanguageEN)
+	err = lemmatise(chunks, &total, tp.language)
 	if err != nil {
 		return &[]domain.WorkWord{}, &map[uuid.UUID]domain.Word{}, []string{}, fmt.Errorf("failed to lemmatise: %w", err)
 	}
