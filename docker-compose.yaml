@@ -2,6 +2,7 @@ services:
   vocabularium:
     build:
       context: .
+      dockerfile: ./deployment/server/Dockerfile
     container_name: vocabularium
     depends_on:
       database:
@@ -16,13 +17,16 @@ services:
       - "4321:4321"
     restart: always
   database:
+    build:
+      context: ./deployment/database
     container_name: database
-    image: postgres:17
     environment:
       POSTGRES_DB: db
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      PRELOAD_SPQR: ${PRELOAD_SPQR}
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      test: ["CMD", "pg_isready", "-U", "$POSTGRES_USER", "-h", "localhost"]
       interval: 1s
       retries: 999999
       start_period: 3s
