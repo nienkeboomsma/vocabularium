@@ -83,7 +83,8 @@ func (wr *WorkRepository) Get(ctx context.Context) ([]domain.Work, error) {
 	FROM work w
 	JOIN author a
 	ON a.id = w.author_id
-	WHERE w.deleted_at IS NULL;
+	WHERE w.deleted_at IS NULL
+	ORDER BY a.name ASC, w.title ASC;
 	`
 
 	works := []domain.Work{}
