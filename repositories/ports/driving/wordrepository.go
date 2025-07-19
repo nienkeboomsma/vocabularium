@@ -9,6 +9,7 @@ import (
 )
 
 type WordRepository interface {
+	GetFrequencyList(ctx context.Context) (*[]domain.WordInWork, error)
 	GetFrequencyListByAuthorID(ctx context.Context, authorID uuid.UUID) (*[]domain.WordInWork, error)
 	GetFrequencyListByWorkID(ctx context.Context, workID uuid.UUID) (*[]domain.WordInWork, error)
 	GetGlossaryByWorkID(ctx context.Context, workID uuid.UUID) (*[]domain.WordInWork, error)

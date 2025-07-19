@@ -30,8 +30,15 @@ func GetWordListTemplate(listType, emoji string) string {
 		<title>
 			{{if .Title}}
     			{{.Title}} by
+       		{{end}}
+         	{{if .Author}}
+         		{{.Author}}
     		{{end}}
-       		{{.Author}}
+      		{{if not .Title}}
+				{{if not .Author}}
+					Corpus
+				{{end}}
+			{{end}}
         </title>
       		<link rel="icon" href="https://fav.farm/%s" />
 		<style>
@@ -50,7 +57,15 @@ func GetWordListTemplate(listType, emoji string) string {
 				{{if .Title}}
     				{{.Title}} <span class="subtle">by</span>
     			{{end}}
-  			{{.Author}}</h1>
+       			{{if .Author}}
+       				{{.Author}}
+           		{{end}}
+				{{if not .Title}}
+					{{if not .Author}}
+						corpus
+					{{end}}
+				{{end}}
+           </h1>
 		<div class="table">
 			<table>
 				<thead>

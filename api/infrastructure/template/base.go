@@ -12,9 +12,8 @@ nav {
 	justify-content: space-between;
 }
 
-nav a,
-table a,
-table button {
+a,
+button {
 	all: initial;
 	background: none;
 	border: none;
@@ -28,15 +27,14 @@ table button {
 	transition: 0.2s ease;
 }
 
-nav a:hover,
-table a:hover,
-table button:hover {
+a:hover,
+button:hover {
 	background-color: rgba(0, 0, 0, 0.07);
 	color: black;
 	transition: 0.2s ease;
 }
 
-nav a:visited {
+a:visited {
 	color: black;
 }
 `

@@ -9,6 +9,12 @@ h1:has(~table) {
 	padding-left: 0.5rem;
 }
 
+.inline-link {
+	left: 0.3rem;
+	position: relative;
+	top: -0.18rem;
+}
+
 .table {
 	max-height: calc(100vh - 10.5rem);
 	overflow-y: auto;
@@ -56,7 +62,7 @@ func GetWorkListTemplate() string {
 		<nav>
 			<a href="http://localhost:4321/upload">📥 Upload work</a>
 		</nav>
-		<h1>Works</h1>
+		<h1>Works <a class="inline-link" title="Corpus frequency list" href="http://localhost:4321/frequency-list-corpus/true">📈</a></h1>
 		{{if .}}
 			<div class="table">
 				<table>
@@ -73,18 +79,18 @@ func GetWorkListTemplate() string {
 							<tr>
 								<td>{{.Author.Name}}</td>
 								<td>
-									<a title="Frequency list" href="http://localhost:4321/frequency-list-author/{{.Author.ID}}/true">📈</a>
+									<a title="{{.Author.Name}} frequency list" href="http://localhost:4321/frequency-list-author/{{.Author.ID}}/true">📈</a>
 								</td>
 								<td></td>
 								<td style="">{{.Title}}</td>
 								<td>
-									<a title="Frequency list" href="http://localhost:4321/frequency-list/{{.ID}}/true">📈</a>
+									<a title="{{.Title}} frequency list" href="http://localhost:4321/frequency-list/{{.ID}}/true">📈</a>
 								</td>
 								<td>
-									<a title="Glossary" href="http://localhost:4321/glossary/{{.ID}}/true">📖</a>
+									<a title="{{.Title}} glossary" href="http://localhost:4321/glossary/{{.ID}}/true">📖</a>
 								</td>
 								<td>
-									<button title="Delete work" onclick="confirmAndDelete(this)" data-id="{{.ID}}">❌</button>
+									<button title="Delete {{.Title}} by {{.Author}}" onclick="confirmAndDelete(this)" data-id="{{.ID}}">❌</button>
 								</td>
 							</tr>
 						{{end}}

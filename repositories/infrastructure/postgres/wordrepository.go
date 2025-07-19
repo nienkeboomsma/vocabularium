@@ -17,6 +17,20 @@ func NewWordRepository(db *database.Client) *WordRepository {
 	return &WordRepository{db: db}
 }
 
+func (wr *WordRepository) GetFrequencyList(ctx context.Context) (*[]domain.WordInWork, error) {
+	q := `
+	SELECT w.id, w.lemma_rich, w.translation, w.known, COUNT(ww.word_id)
+	FROM work_word ww
+	JOIN word w
+	ON w.id = ww.word_id
+	WHERE ww.deleted_at IS NULL
+	GROUP BY w.id, w.lemma_rich, w.known
+	ORDER BY COUNT(ww.word_id) DESC;
+	`
+
+	return wr.getWordList(ctx, q)
+}
+
 func (wr *WordRepository) GetFrequencyListByAuthorID(ctx context.Context, authorID uuid.UUID) (*[]domain.WordInWork, error) {
 	q := `
 	SELECT w.id, w.lemma_rich, w.translation, w.known, COUNT(ww.word_id)
@@ -35,7 +49,7 @@ func (wr *WordRepository) GetFrequencyListByAuthorID(ctx context.Context, author
 	ORDER BY COUNT(ww.word_id) DESC;
 	`
 
-	return wr.getWordListByWorkID(ctx, q, authorID)
+	return wr.getWordList(ctx, q, authorID)
 }
 
 func (wr *WordRepository) GetFrequencyListByWorkID(ctx context.Context, workID uuid.UUID) (*[]domain.WordInWork, error) {
@@ -53,7 +67,7 @@ func (wr *WordRepository) GetFrequencyListByWorkID(ctx context.Context, workID u
 	ORDER BY COUNT(ww.word_id) DESC;
 	`
 
-	return wr.getWordListByWorkID(ctx, q, workID)
+	return wr.getWordList(ctx, q, workID)
 }
 
 func (wr *WordRepository) GetGlossaryByWorkID(ctx context.Context, workID uuid.UUID) (*[]domain.WordInWork, error) {
@@ -70,7 +84,7 @@ func (wr *WordRepository) GetGlossaryByWorkID(ctx context.Context, workID uuid.U
 	ORDER BY ww.word_index ASC;
 	`
 
-	return wr.getWordListByWorkID(ctx, q, workID)
+	return wr.getWordList(ctx, q, workID)
 }
 
 func (wr *WordRepository) Insert(ctx context.Context, db database.Executor, w domain.Word) (domain.Word, error) {
@@ -140,7 +154,7 @@ func (wr *WordRepository) ToggleKnownStatus(ctx context.Context, wordID uuid.UUI
 	return word, nil
 }
 
-func (wr *WordRepository) getWordListByWorkID(ctx context.Context, q string, args ...any) (*[]domain.WordInWork, error) {
+func (wr *WordRepository) getWordList(ctx context.Context, q string, args ...any) (*[]domain.WordInWork, error) {
 	words := []domain.WordInWork{}
 
 	rows, err := wr.db.Pool.Query(ctx, q, args...)

@@ -48,6 +48,7 @@ func main() {
 
 	mux.HandleFunc("GET /frequency-list/{id}/{skipKnown}", api.GetFrequencyListByWork())
 	mux.HandleFunc("GET /frequency-list-author/{id}/{skipKnown}", api.GetFrequencyListByAuthor())
+	mux.HandleFunc("GET /frequency-list-corpus/{skipKnown}", api.GetFrequencyList())
 	mux.HandleFunc("GET /glossary/{id}/{skipKnown}", api.GetGlossaryByWork())
 	mux.HandleFunc("GET /upload", api.Upload())
 	mux.HandleFunc("GET /", api.GetWorks())

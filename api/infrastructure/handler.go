@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -60,9 +61,21 @@ func (a *API) DeleteWork() http.HandlerFunc {
 	}
 }
 
+func (a *API) GetFrequencyList() http.HandlerFunc {
+	return handleWordList(
+		template.GetWordListTemplate("Frequency list", "📈"),
+		func(r *http.Request) (uuid.UUID, error) { return uuid.UUID{}, nil },
+		func(ctx context.Context, id uuid.UUID) (domain.Work, error) { return domain.Work{}, nil },
+		func(ctx context.Context, id uuid.UUID) (*[]domain.WordInWork, error) {
+			return a.wordRepository.GetFrequencyList(ctx)
+		},
+	)
+}
+
 func (a *API) GetFrequencyListByAuthor() http.HandlerFunc {
 	return handleWordList(
 		template.GetWordListTemplate("Frequency list", "📈"),
+		func(r *http.Request) (uuid.UUID, error) { return uuid.Parse(r.PathValue("id")) },
 		func(ctx context.Context, id uuid.UUID) (domain.Work, error) {
 			author, err := a.authorRepository.GetByID(ctx, id)
 			if err != nil {
@@ -80,6 +93,7 @@ func (a *API) GetFrequencyListByAuthor() http.HandlerFunc {
 func (a *API) GetFrequencyListByWork() http.HandlerFunc {
 	return handleWordList(
 		template.GetWordListTemplate("Frequency list", "📈"),
+		func(r *http.Request) (uuid.UUID, error) { return uuid.Parse(r.PathValue("id")) },
 		a.workRepository.GetByID,
 		a.wordRepository.GetFrequencyListByWorkID,
 	)
@@ -88,6 +102,7 @@ func (a *API) GetFrequencyListByWork() http.HandlerFunc {
 func (a *API) GetGlossaryByWork() http.HandlerFunc {
 	return handleWordList(
 		template.GetWordListTemplate("Glossary", "📖"),
+		func(r *http.Request) (uuid.UUID, error) { return uuid.Parse(r.PathValue("id")) },
 		a.workRepository.GetByID,
 		a.wordRepository.GetGlossaryByWorkID,
 	)
@@ -205,11 +220,12 @@ func (a *API) Upload() http.HandlerFunc {
 
 func handleWordList(
 	htmlTemplate string,
+	idCallback func(r *http.Request) (uuid.UUID, error),
 	workCallback func(ctx context.Context, id uuid.UUID) (domain.Work, error),
 	wordCallback func(ctx context.Context, id uuid.UUID) (*[]domain.WordInWork, error),
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := uuid.Parse(r.PathValue("id"))
+		id, err := idCallback(r)
 		if err != nil {
 			http.Error(w, "Invalid UUID", http.StatusBadRequest)
 			return
@@ -256,10 +272,13 @@ func useTemplate(w http.ResponseWriter, template string, data any) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	err = tmpl.Execute(w, data)
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
 	if err != nil {
 		http.Error(w, "Failed to render HTML template", http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	buf.WriteTo(w)
 }
