@@ -66,11 +66,14 @@ func NewTextProcessor(language string) (*TextProcessor, error) {
 func (tp *TextProcessor) Process(input []byte) (*[]domain.WorkWord, *map[uuid.UUID]domain.Word, []string, error) {
 	sanitised := sanitise(input)
 
-	chunks := chunkBySentence(sanitised)
+	chunks, err := chunkBySentence(sanitised)
+	if err != nil {
+		return &[]domain.WorkWord{}, &map[uuid.UUID]domain.Word{}, []string{}, fmt.Errorf("failed to divide into sentences: %w", err)
+	}
 
 	var total bytes.Buffer
 
-	err := lemmatise(chunks, &total, LanguageEN)
+	err = lemmatise(chunks, &total, LanguageEN)
 	if err != nil {
 		return &[]domain.WorkWord{}, &map[uuid.UUID]domain.Word{}, []string{}, fmt.Errorf("failed to lemmatise: %w", err)
 	}

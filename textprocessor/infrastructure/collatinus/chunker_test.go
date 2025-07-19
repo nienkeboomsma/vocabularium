@@ -44,7 +44,7 @@ func TestChunkBySentence(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			output := chunkBySentence(test.input)
+			output, _ := chunkBySentence(test.input)
 			assert.Equal(t, test.expected, output)
 		})
 	}
