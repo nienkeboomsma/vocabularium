@@ -101,41 +101,41 @@ func (a *API) GetWorks() http.HandlerFunc {
 			return
 		}
 
-		workListTemplate := template.GetWorkListTemplate()
-
-		tmpl, err := t.New("works").Parse(workListTemplate)
-		if err != nil {
-			http.Error(w, "Failed to allocate HTML template", http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		err = tmpl.Execute(w, works)
-		if err != nil {
-			http.Error(w, "Failed to render HTML template", http.StatusInternalServerError)
-			return
-		}
+		useTemplate(w, template.GetWorkListTemplate(), works)
 	}
 }
 
 func (a *API) Lemmatise() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		workID := database.StringToUUID(fmt.Sprintf("%s_%s", r.FormValue("author"), r.FormValue("title")))
+		work, err := a.workRepository.GetByID(r.Context(), workID)
+		if err == nil {
+			w.WriteHeader(http.StatusBadRequest)
+			useTemplate(w, template.GetFailedWorkUploadTemplate(), template.UploadFailedData{
+				Message: "A work with this author and title already exists. Please remove it and try again.",
+				Error:   "",
+			})
+			return
+		}
+
 		file, _, err := r.FormFile("file")
 		if err != nil {
-			errorHTML := template.GetFailedWorkUploadTemplate("Failed to get uploaded file from the request", err)
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprint(w, errorHTML)
+			useTemplate(w, template.GetFailedWorkUploadTemplate(), template.UploadFailedData{
+				Message: "Failed to get uploaded file from the request",
+				Error:   err.Error(),
+			})
 			return
 		}
 		defer file.Close()
 
 		uploadedData, err := io.ReadAll(file)
 		if err != nil {
-			errorHTML := template.GetFailedWorkUploadTemplate("Failed to read the contents of the uploaded file", err)
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprint(w, errorHTML)
+			useTemplate(w, template.GetFailedWorkUploadTemplate(), template.UploadFailedData{
+				Message: "Failed to read the contents of the uploaded file",
+				Error:   err.Error(),
+			})
 			return
 		}
 
@@ -143,34 +143,28 @@ func (a *API) Lemmatise() http.HandlerFunc {
 			ID:   database.StringToUUID(r.FormValue("author")),
 			Name: r.FormValue("author"),
 		}
-		work := domain.Work{
-			ID:    database.StringToUUID(fmt.Sprintf("%s_%s", r.FormValue("author"), r.FormValue("title"))),
+		work = domain.Work{
+			ID:    workID,
 			Title: r.FormValue("title"),
 		}
 
 		workWords, words, logs, err := a.textProcessor.Process(uploadedData)
 		if err != nil {
-			errorHTML := template.GetFailedWorkUploadTemplate("Failed to process the uploaded text", err)
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprint(w, errorHTML)
+			useTemplate(w, template.GetFailedWorkUploadTemplate(), template.UploadFailedData{
+				Message: "Failed to process the uploaded text",
+				Error:   err.Error(),
+			})
 			return
 		}
 
 		err = a.workPersister.Persist(r.Context(), author, work, words, workWords)
 		if err != nil {
-			errorHTML := template.GetFailedWorkUploadTemplate("Failed to save the work in the database", err)
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprint(w, errorHTML)
-			return
-		}
-
-		successTemplate := template.GetSuccessfulWorkUploadTemplate()
-
-		tmpl, err := t.New("works").Parse(successTemplate)
-		if err != nil {
-			http.Error(w, "Failed to allocate HTML template", http.StatusInternalServerError)
+			useTemplate(w, template.GetFailedWorkUploadTemplate(), template.UploadFailedData{
+				Message: "Failed to save the work in the database",
+				Error:   err.Error(),
+			})
 			return
 		}
 
@@ -178,12 +172,8 @@ func (a *API) Lemmatise() http.HandlerFunc {
 			logs[i] = t.HTMLEscapeString(log)
 		}
 
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		err = tmpl.Execute(w, template.UploadSuccessData{Logs: logs})
-		if err != nil {
-			http.Error(w, "Failed to render HTML template", http.StatusInternalServerError)
-			return
-		}
+		w.WriteHeader(http.StatusBadRequest)
+		useTemplate(w, template.GetSuccessfulWorkUploadTemplate(), template.UploadSuccessData{Logs: logs})
 	}
 }
 
@@ -251,23 +241,25 @@ func handleWordList(
 			words = &filteredWords
 		}
 
-		pageData := template.WordListPageData{
+		useTemplate(w, htmlTemplate, template.WordListPageData{
 			Title:  work.Title,
 			Author: work.Author.Name,
 			Words:  words,
-		}
+		})
+	}
+}
 
-		tmpl, err := t.New("words").Parse(htmlTemplate)
-		if err != nil {
-			http.Error(w, "Failed to allocate HTML template", http.StatusInternalServerError)
-			return
-		}
+func useTemplate(w http.ResponseWriter, template string, data any) {
+	tmpl, err := t.New("works").Parse(template)
+	if err != nil {
+		http.Error(w, "Failed to allocate HTML template", http.StatusInternalServerError)
+		return
+	}
 
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		err = tmpl.Execute(w, pageData)
-		if err != nil {
-			http.Error(w, "Failed to render HTML template", http.StatusInternalServerError)
-			return
-		}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, "Failed to render HTML template", http.StatusInternalServerError)
+		return
 	}
 }

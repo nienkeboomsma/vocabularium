@@ -29,11 +29,11 @@ services:
       test: ["CMD", "pg_isready", "-U", "$POSTGRES_USER", "-h", "localhost"]
       interval: 1s
       retries: 999999
-      start_period: 3s
+      start_period: 1s
     networks:
       - vocabularium
     ports:
-      - 5432:5432
+      - 5433:5432
     restart: always
     volumes:
       - database:/var/lib/postgresql/data

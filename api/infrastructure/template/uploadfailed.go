@@ -4,6 +4,11 @@ import (
 	"fmt"
 )
 
+type UploadFailedData struct {
+	Message string
+	Error   string
+}
+
 var consoleStyles = `
 .console {
   background-color: #1e1e1e;
@@ -14,7 +19,7 @@ var consoleStyles = `
 }
 `
 
-func GetFailedWorkUploadTemplate(message string, err error) string {
+func GetFailedWorkUploadTemplate() string {
 	template := `
 <!DOCTYPE html>
 <html>
@@ -32,11 +37,13 @@ func GetFailedWorkUploadTemplate(message string, err error) string {
 			<a href="http://localhost:4321/upload">👈🏻 Try again</a>
 		</nav>
 		<h1>❌ Upload failed</h1>
-		<p>%s:</p>
-		<p class="console">%s</p>
+		<p>{{.Message}}</p>
+		{{if .Error}}
+			<p class="console">{{.Error}}</p>
+		{{end}}
 	</body>
 </html>
 `
 
-	return fmt.Sprintf(template, baseStyles, consoleStyles, message, err)
+	return fmt.Sprintf(template, baseStyles, consoleStyles)
 }
